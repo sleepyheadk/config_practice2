@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Виртуальное окружение
+.venv/
+venv/
+
+# Настройки редакторов
+.idea/
+.vscode/
+*.iml
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Результаты работы программы
+/graph.svg
+/out.svg
