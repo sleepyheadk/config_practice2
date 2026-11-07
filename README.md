@@ -60,7 +60,7 @@ python -m unittest discover -s tests -p "tests_*.py" -v
 ### Пример работы программы
 
 1. Введены верные имя пакета и репозиторий
-`python3 src/main.py --package requests --repo https://pypi.org/pypi`
+`python src/main.py --package requests --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 package: requests
@@ -71,7 +71,7 @@ ascii_tree: False
 filter:
 ```
 2. Все опции
-`python3 src/main.py --package A --repo tests/graph.txt --test-mode --output out.svg --ascii-tree --filter test`
+`python src/main.py --package A --repo tests/graph.txt --test-mode --output out.svg --ascii-tree --filter test`
 Вывод:
 ```commandline
 package: A 
@@ -82,20 +82,115 @@ ascii_tree: True
 filter: test
 ```
 3. Без параметров
-`python3 src/main.py`
+`python src/main.py`
 Вывод:
 `Ошибка: имя пакета не задано (--package)`
 4. Репозиторий не URL
-`python3 src/main.py --package requests --repo pypi.org`
+`python src/main.py --package requests --repo pypi.org`
 Вывод:
 `Ошибка: некорректный URL: pypi.org`
 5. Неверное расширение
-`python3 src/main.py --package requests --repo https://pypi.org/pypi --output graph.png
+`python src/main.py --package requests --repo https://pypi.org/pypi --output graph.png
 `
 Вывод:
 `Ошибка: выходной файл должен иметь расширение .svg`
 6. Неизвестная опция: ошибка argparse, код 2
-`python3 src/main.py --package requests --repo https://pypi.org/pypi --foo`
+`python src/main.py --package requests --repo https://pypi.org/pypi --foo`
 Вывод:
 `main.py: error: unrecognized arguments: --foo`
 
+## Этап 2
+
+Получение прямых зависимостей пакета по URL репозитория (JSON-интерфейс PyPI)
+и вывод их на экран. Менеджеры пакетов и сторонние библиотеки не
+используются, запрос выполняется стандартным `urllib`.
+
+### Структура проекта
+
+```
+src/main.py            - точка входа
+src/cli.py             - разбор аргументов командной строки
+src/validation.py      - проверка параметров
+src/errors.py          - ошибки ConfigError и RepositoryError
+src/repository.py      - скачивание метаданных пакета по URL
+src/requirement.py     - разбор строки зависимости (PEP 508)
+src/dependencies.py    - получение списка прямых зависимостей
+tests/tests_phase2.py  - тесты этапа 2
+tests/graph.txt        - тестовый репозиторий
+run.sh                 - запуск программы на Linux/macOS
+run.bat                - запуск программы на Windows
+```
+
+### Описание
+
+1. Программа запрашивает `<repo>/<package>/json` и получает метаданные пакета
+   последней версии.
+2. Из поля `info.requires_dist` берутся строки зависимостей
+   (например, `urllib3<3,>=1.21.1`) и разбираются на имя, версии и условие.
+3. Зависимости с условием `extra == ...` (опциональные дополнения)
+   пропускаются. Остальные условия (`python_version`, `sys_platform`)
+   не вычисляются, такие зависимости остаются в списке.
+4. Имена приводятся к единому виду (нижний регистр, `_` и `.` заменяются
+   на `-`), повторы убираются.
+5. Список имён выводится на экран, по одному на строку.
+
+Вывод параметров «ключ: значение» из этапа 1 убран. Тестовый режим
+(`--test-mode`) пока выдаёт ошибку, он будет реализован на этапе 3.
+Ошибки репозитория (пакет не найден, нет связи, неверный ответ) выводятся
+как `Ошибка: ...` с кодом выхода 1.
+
+### Добавленные функции
+
+| Файл | Функция | Назначение |
+|---|---|---|
+| `repository.py` | `fetch_package_info(repo, package)` | скачивает и разбирает JSON с метаданными пакета |
+| `repository.py` | `build_url`, `download`, `parse_json` | формирование адреса, запрос, разбор ответа |
+| `requirement.py` | `parse_requirement(line)` | разбирает строку зависимости на имя, версии, условие |
+| `requirement.py` | `normalize_name`, `is_extra` | нормализация имени, проверка на опциональную зависимость |
+| `dependencies.py` | `get_direct_dependencies(package, repo)` | возвращает имена прямых зависимостей |
+| `dependencies.py` | `extract_requirement_lines(data)` | достаёт `requires_dist` из метаданных |
+| `main.py` | `run(args)`, `print_dependencies(...)` | получение и вывод зависимостей |
+| `errors.py` | `RepositoryError` | ошибка получения данных из репозитория |
+
+### Примеры работы программы
+
+1. Пакет с зависимостями
+`python src/main.py --package requests --repo https://pypi.org/pypi`
+Вывод:
+```commandline
+Прямые зависимости пакета requests:
+charset-normalizer
+idna
+urllib3
+certifi
+```
+2. Пакет без зависимостей
+`python src/main.py --package six --repo https://pypi.org/pypi`
+Вывод:
+```commandline
+У пакета six нет прямых зависимостей
+```
+3. Зависимость с условием (`colorama` только для Windows, условие не вычисляется)
+`python src/main.py --package click --repo https://pypi.org/pypi`
+Вывод:
+```commandline
+У пакета click нет прямых зависимостей
+```
+4. Пакет не найден
+`python src/main.py --package no-such-pkg-12345 --repo https://pypi.org/pypi`
+Вывод:
+```commandline
+Ошибка: пакет не найден в репозитории (https://pypi.org/pypi/no-such-pkg-12345/json)
+```
+5. Репозиторий недоступен
+`python src/main.py --package requests --repo https://no-such-host-12345.org/pypi`
+Вывод:
+```commandline
+Ошибка: не удалось подключиться к https://no-such-host-12345.org/pypi/requests/json: [Errno 11001] getaddrinfo failed
+```
+6. Тестовый режим пока не поддерживается
+`python src/main.py --package A --repo tests/graph.txt --test-mode`
+Вывод:
+```commandline
+Ошибка: тестовый режим пока не реализован
+```
