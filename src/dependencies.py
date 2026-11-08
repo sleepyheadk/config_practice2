@@ -1,6 +1,9 @@
+from functools import partial
+
 from errors import RepositoryError
+from file_repository import make_file_provider
 from repository import fetch_package_info
-from requirement import is_extra, parse_requirement
+from requirement import is_extra, normalize_name, parse_requirement
 
 
 def extract_requirement_lines(data):
@@ -33,3 +36,15 @@ def get_direct_dependencies(package, repo):
     requirements = [parse_requirement(line) for line in lines]
     names = [req.name for req in requirements if not is_extra(req)]
     return list(dict.fromkeys(names))
+
+
+def make_source(package, repo, test_mode):
+    """
+    Выбирает источник данных о зависимостях.
+
+    Возвращает имя корневого пакета и функцию
+    «пакет -> список его прямых зависимостей».
+    """
+    if test_mode:
+        return package, make_file_provider(repo)
+    return normalize_name(package), partial(get_direct_dependencies, repo=repo)

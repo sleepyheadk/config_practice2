@@ -47,8 +47,15 @@ def validate_output(output):
         raise ConfigError(f"'{output}' является папкой, а не файлом")
 
 
+def validate_filter(substring, package):
+    """Проверяет, что фильтр не исключает анализируемый пакет."""
+    if substring and substring.lower() in package.lower():
+        raise ConfigError("фильтр исключает анализируемый пакет")
+
+
 def validate_args(args):
     """Проверяет все параметры"""
     validate_package(args.package)
     validate_repo(args.repo, args.test_mode)
     validate_output(args.output)
+    validate_filter(args.filter, args.package)

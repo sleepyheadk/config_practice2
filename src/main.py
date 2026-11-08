@@ -1,27 +1,19 @@
 import sys
 
 from cli import parse_args
-from dependencies import get_direct_dependencies
+from dependencies import make_source
 from errors import ConfigError, RepositoryError
+from graph import build_graph
+from report import format_report
 from validation import validate_args
 
 
-def print_dependencies(package, dependencies):
-    """Выводит прямые зависимости пакета на экран."""
-    if not dependencies:
-        print(f"У пакета {package} нет прямых зависимостей")
-        return
-    print(f"Прямые зависимости пакета {package}:")
-    for name in dependencies:
-        print(name)
-
-
 def run(args):
-    """Получает и выводит прямые зависимости пакета."""
-    if args.test_mode:
-        raise ConfigError("тестовый режим пока не реализован")
-    dependencies = get_direct_dependencies(args.package, args.repo)
-    print_dependencies(args.package, dependencies)
+    """Строит граф зависимостей пакета и выводит его на экран."""
+    root, get_dependencies = make_source(
+        args.package, args.repo, args.test_mode)
+    result = build_graph(root, get_dependencies, args.filter)
+    print(format_report(root, result))
 
 
 def main():
