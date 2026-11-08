@@ -1,4 +1,6 @@
 NO_DEPENDENCIES = "(нет зависимостей)"
+CYCLE_WARNING = ("Внимание: в графе есть циклические зависимости, "
+                 "порядок для входящих в них пакетов условный:")
 
 
 def format_dependencies(names):
@@ -27,4 +29,19 @@ def format_report(root, result):
     """Собирает полный текст отчёта по результату обхода графа."""
     lines = format_graph(root, result.graph)
     lines.extend(format_cycles(result.cycles))
+    return "\n".join(lines)
+
+
+def format_order(order):
+    """Возвращает пронумерованный список пакетов в порядке загрузки."""
+    return [f"{number}. {name}" for number, name in enumerate(order, start=1)]
+
+
+def format_load_order(root, order, cycles):
+    """Собирает текст с порядком загрузки зависимостей пакета."""
+    lines = [f"Порядок загрузки зависимостей пакета {root}:"]
+    lines.extend(format_order(order))
+    if cycles:
+        lines.append(CYCLE_WARNING)
+        lines.extend(" -> ".join(cycle) for cycle in cycles)
     return "\n".join(lines)

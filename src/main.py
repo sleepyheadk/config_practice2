@@ -4,16 +4,21 @@ from cli import parse_args
 from dependencies import make_source
 from errors import ConfigError, RepositoryError
 from graph import build_graph
-from report import format_report
+from load_order import build_load_order
+from report import format_load_order, format_report
 from validation import validate_args
 
 
 def run(args):
-    """Строит граф зависимостей пакета и выводит его на экран."""
+    """Строит граф зависимостей пакета и выводит результат на экран."""
     root, get_dependencies = make_source(
         args.package, args.repo, args.test_mode)
     result = build_graph(root, get_dependencies, args.filter)
-    print(format_report(root, result))
+    if args.load_order:
+        order = build_load_order(root, result.graph)
+        print(format_load_order(root, order, result.cycles))
+    else:
+        print(format_report(root, result))
 
 
 def main():

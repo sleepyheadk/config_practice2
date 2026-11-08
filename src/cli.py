@@ -36,4 +36,8 @@ def parse_args():
         "--filter", default="",
         help="исключить пакеты, в имени которых есть эта подстрока"
     )
+    parser.add_argument(
+        "--load-order", action="store_true",
+        help="вывести порядок загрузки зависимостей пакета"
+    )
     return parser.parse_args()
