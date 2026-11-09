@@ -1,10 +1,11 @@
 # Визуализатор графа зависимостей pip-пакетов
-
 Консольная утилита на Python, которая строит граф зависимостей pip-пакета.
 Сторонние библиотеки не используются, достаточно Python 3.8+.
+
 ## Этап 1
 Разбор и проверка параметров командной строки,
 вывод параметров в формате «ключ: значение».
+
 ### Структура проекта
 ```
 src/main.py            - исходный код
@@ -61,7 +62,7 @@ python -m unittest discover -s tests -p "tests_*.py" -v
 ### Пример работы программы
 
 1. Введены верные имя пакета и репозиторий
-`python src/main.py --package requests --repo https://pypi.org/pypi`
+`.\run.bat --package requests --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 package: requests
@@ -72,7 +73,7 @@ ascii_tree: False
 filter:
 ```
 2. Все опции
-`python src/main.py --package A --repo tests/graph.txt --test-mode --output out.svg --ascii-tree --filter test`
+`.\run.bat --package A --repo tests/graph.txt --test-mode --output out.svg --ascii-tree --filter test`
 Вывод:
 ```commandline
 package: A 
@@ -83,25 +84,24 @@ ascii_tree: True
 filter: test
 ```
 3. Без параметров
-`python src/main.py`
+`.\run.bat`
 Вывод:
 `Ошибка: имя пакета не задано (--package)`
 4. Репозиторий не URL
-`python src/main.py --package requests --repo pypi.org`
+`.\run.bat --package requests --repo pypi.org`
 Вывод:
 `Ошибка: некорректный URL: pypi.org`
 5. Неверное расширение
-`python src/main.py --package requests --repo https://pypi.org/pypi --output graph.png
+`.\run.bat --package requests --repo https://pypi.org/pypi --output graph.png
 `
 Вывод:
 `Ошибка: выходной файл должен иметь расширение .svg`
 6. Неизвестная опция: ошибка argparse, код 2
-`python src/main.py --package requests --repo https://pypi.org/pypi --foo`
+`.\run.bat --package requests --repo https://pypi.org/pypi --foo`
 Вывод:
 `main.py: error: unrecognized arguments: --foo`
 
 ## Этап 2
-
 Получение прямых зависимостей пакета по URL репозитория (JSON-интерфейс PyPI)
 и вывод их на экран. Менеджеры пакетов и сторонние библиотеки не
 используются, запрос выполняется стандартным `urllib`.
@@ -156,7 +156,7 @@ run.bat                - запуск программы на Windows
 ### Примеры работы программы
 
 1. Пакет с зависимостями
-`python src/main.py --package requests --repo https://pypi.org/pypi`
+`.\run.bat --package requests --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 Прямые зависимости пакета requests:
@@ -166,38 +166,37 @@ urllib3
 certifi
 ```
 2. Пакет без зависимостей
-`python src/main.py --package six --repo https://pypi.org/pypi`
+`.\run.bat --package six --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 У пакета six нет прямых зависимостей
 ```
 3. Зависимость с условием (`colorama` только для Windows, условие не вычисляется)
-`python src/main.py --package click --repo https://pypi.org/pypi`
+`.\run.bat --package click --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 У пакета click нет прямых зависимостей
 ```
 4. Пакет не найден
-`python src/main.py --package no-such-pkg-12345 --repo https://pypi.org/pypi`
+`.\run.bat --package no-such-pkg-12345 --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 Ошибка: пакет не найден в репозитории (https://pypi.org/pypi/no-such-pkg-12345/json)
 ```
 5. Репозиторий недоступен
-`python src/main.py --package requests --repo https://no-such-host-12345.org/pypi`
+`.\run.bat --package requests --repo https://no-such-host-12345.org/pypi`
 Вывод:
 ```commandline
 Ошибка: не удалось подключиться к https://no-such-host-12345.org/pypi/requests/json: [Errno 11001] getaddrinfo failed
 ```
 6. Тестовый режим пока не поддерживается
-`python src/main.py --package A --repo tests/graph.txt --test-mode`
+`.\run.bat --package A --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Ошибка: тестовый режим пока не реализован
 ```
 
 ## Этап 3
-
 Построение полного графа зависимостей пакета (с учётом транзитивности) и
 основные операции над ним. Граф строится обходом в глубину (DFS) без
 рекурсии, с явным стеком.
@@ -215,8 +214,6 @@ src/dependencies.py     - прямые зависимости пакета, вы
 src/file_repository.py  - чтение тестового репозитория из файла
 src/graph.py            - построение графа: DFS без рекурсии, фильтр, циклы
 src/report.py           - текстовый вывод графа и циклов
-tests/tests_phase1.py   - тесты этапа 1
-tests/tests_phase2.py   - тесты этапа 2
 tests/tests_phase3.py   - тесты этапа 3
 tests/graph.txt         - тестовый репозиторий
 run.sh                  - запуск программы на Linux/macOS
@@ -293,7 +290,7 @@ K: KA KB LA
 ### Примеры работы программы
 
 1. Тестовый репозиторий: общая зависимость (ромб)
-`python src/main.py --package A --repo tests/graph.txt --test-mode`
+`.\run.bat --package A --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Граф зависимостей пакета A:
@@ -304,7 +301,7 @@ C -> D
 Циклических зависимостей нет
 ```
 2. Цикл из трёх пакетов
-`python src/main.py --package E --repo tests/graph.txt --test-mode`
+`.\run.bat --package E --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Граф зависимостей пакета E:
@@ -315,7 +312,7 @@ G -> E
 E -> F -> G -> E
 ```
 3. Пакет зависит сам от себя
-`python src/main.py --package H --repo tests/graph.txt --test-mode`
+`.\run.bat --package H --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Граф зависимостей пакета H:
@@ -324,7 +321,7 @@ H -> H
 H -> H
 ```
 4. Зависимость без собственной строки в файле
-`python src/main.py --package I --repo tests/graph.txt --test-mode`
+`.\run.bat --package I --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Граф зависимостей пакета I:
@@ -333,7 +330,7 @@ J -> (нет зависимостей)
 Циклических зависимостей нет
 ```
 5. Фильтр по подстроке
-`python src/main.py --package K --repo tests/graph.txt --test-mode --filter A`
+`.\run.bat --package K --repo tests/graph.txt --test-mode --filter A`
 Вывод:
 ```commandline
 Граф зависимостей пакета K:
@@ -342,7 +339,7 @@ KB -> (нет зависимостей)
 Циклических зависимостей нет
 ```
 6. Реальный репозиторий: полный граф зависимостей
-`python src/main.py --package requests --repo https://pypi.org/pypi`
+`.\run.bat --package requests --repo https://pypi.org/pypi`
 Вывод:
 ```commandline
 Граф зависимостей пакета requests:
@@ -354,7 +351,7 @@ certifi -> (нет зависимостей)
 Циклических зависимостей нет
 ```
 7. Реальный репозиторий с фильтром
-`python src/main.py --package requests --repo https://pypi.org/pypi --filter urllib`
+`.\run.bat --package requests --repo https://pypi.org/pypi --filter urllib`
 Вывод:
 ```commandline
 Граф зависимостей пакета requests:
@@ -365,25 +362,25 @@ certifi -> (нет зависимостей)
 Циклических зависимостей нет
 ```
 8. Фильтр исключает анализируемый пакет
-`python src/main.py --package A --repo tests/graph.txt --test-mode --filter A`
+`.\run.bat --package A --repo tests/graph.txt --test-mode --filter A`
 Вывод:
 ```commandline
 Ошибка: фильтр исключает анализируемый пакет
 ```
 9. Пакета нет в тестовом репозитории
-`python src/main.py --package Z --repo tests/graph.txt --test-mode`
+`.\run.bat --package Z --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Ошибка: пакет Z не найден в тестовом репозитории
 ```
 10. Файл неверного формата (для проверки подставлен README.md)
-`python src/main.py --package A --repo README.md --test-mode`
+`.\run.bat --package A --repo README.md --test-mode`
 Вывод:
 ```commandline
 Ошибка: строка 3: ожидается формат 'A: B C'
 ```
 11. Файл тестового репозитория не найден
-`python src/main.py --package A --repo nofile.txt --test-mode`
+`.\run.bat --package A --repo nofile.txt --test-mode`
 Вывод:
 ```commandline
 Ошибка: файл не найден
@@ -391,7 +388,6 @@ certifi -> (нет зависимостей)
 ## Этап 4
 
 ### Структура проекта
-
 Вывод порядка загрузки зависимостей пакета: в каком порядке их нужно
 устанавливать, чтобы каждая зависимость оказалась раньше пакета, который от неё
 зависит. Корневой пакет идёт последним. Режим включается опцией
@@ -416,9 +412,6 @@ src/file_repository.py  - чтение тестового репозитория
 src/graph.py            - построение графа: DFS без рекурсии, фильтр, циклы
 src/load_order.py       - порядок загрузки зависимостей (DFS без рекурсии)
 src/report.py           - текстовый вывод графа, циклов и порядка загрузки
-tests/tests_phase1.py   - тесты этапа 1
-tests/tests_phase2.py   - тесты этапа 2
-tests/tests_phase3.py   - тесты этапа 3
 tests/tests_phase4.py   - тесты этапа 4
 tests/graph.txt         - тестовый репозиторий
 run.sh                  - запуск программы на Linux/macOS
@@ -428,7 +421,7 @@ run.bat                 - запуск программы на Windows
 ### Примеры работы программы
 
 1. Тестовый репозиторий: общая зависимость (ромб)
-`python src/main.py --package A --repo tests/graph.txt --test-mode --load-order`
+`.\run.bat --package A --repo tests/graph.txt --test-mode --load-order`
 Вывод:
 ```commandline
 Порядок загрузки зависимостей пакета A:
@@ -438,7 +431,7 @@ run.bat                 - запуск программы на Windows
 4. A
 ```
 2. Несколько уровней с общими зависимостями
-`python src/main.py --package R --repo tests/graph.txt --test-mode --load-order`
+`.\run.bat --package R --repo tests/graph.txt --test-mode --load-order`
 Вывод:
 ```commandline
 Порядок загрузки зависимостей пакета R:
@@ -450,7 +443,7 @@ run.bat                 - запуск программы на Windows
 6. R
 ```
 3. Фильтр: пакет `V` исключён из порядка
-`python src/main.py --package R --repo tests/graph.txt --test-mode --load-order --filter V`
+`.\run.bat --package R --repo tests/graph.txt --test-mode --load-order --filter V`
 Вывод:
 ```commandline
 Порядок загрузки зависимостей пакета R:
@@ -461,7 +454,7 @@ run.bat                 - запуск программы на Windows
 5. R
 ```
 4. Цикл: порядок условный, выводится предупреждение
-`python src/main.py --package E --repo tests/graph.txt --test-mode --load-order`
+`.\run.bat --package E --repo tests/graph.txt --test-mode --load-order`
 Вывод:
 ```commandline
 Порядок загрузки зависимостей пакета E:
@@ -472,7 +465,7 @@ run.bat                 - запуск программы на Windows
 E -> F -> G -> E
 ```
 5. Без `--load-order` выводится граф, как на этапе 3
-`python src/main.py --package A --repo tests/graph.txt --test-mode`
+`.\run.bat --package A --repo tests/graph.txt --test-mode`
 Вывод:
 ```commandline
 Граф зависимостей пакета A:
@@ -483,7 +476,7 @@ C -> D
 Циклических зависимостей нет
 ```
 6. Реальный репозиторий
-`python src/main.py --package requests --repo https://pypi.org/pypi --load-order`
+`.\run.bat --package requests --repo https://pypi.org/pypi --load-order`
 Вывод:
 ```commandline
 Порядок загрузки зависимостей пакета requests:
@@ -494,7 +487,7 @@ C -> D
 5. requests
 ```
 7. Пакета нет в тестовом репозитории
-`python src/main.py --package XX --repo tests/graph.txt --test-mode --load-order`
+`.\run.bat --package XX --repo tests/graph.txt --test-mode --load-order`
 Вывод:
 ```commandline
 Ошибка: пакет XX не найден в тестовом репозитории
@@ -612,7 +605,7 @@ docs/                   - примеры визуализации (SVG и DOT)
 
 #### requests
 
-`python src/main.py --package requests --repo https://pypi.org/pypi --ascii-tree --output docs/requests.svg`
+`.\run.bat --package requests --repo https://pypi.org/pypi --ascii-tree --output docs/requests.svg`
 
 ASCII-дерево:
 ```commandline
@@ -626,7 +619,7 @@ requests
 
 #### flask
 
-`python src/main.py --package flask --repo https://pypi.org/pypi --ascii-tree --output docs/flask.svg`
+`.\run.bat --package flask --repo https://pypi.org/pypi --ascii-tree --output docs/flask.svg`
 
 ASCII-дерево:
 ```commandline
@@ -646,7 +639,7 @@ flask
 
 #### httpx
 
-`python src/main.py --package httpx --repo https://pypi.org/pypi --ascii-tree --output docs/httpx.svg`
+`.\run.bat --package httpx --repo https://pypi.org/pypi --ascii-tree --output docs/httpx.svg`
 
 ASCII-дерево:
 ```commandline
