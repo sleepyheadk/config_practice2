@@ -4,3 +4,7 @@ class ConfigError(Exception):
 
 class RepositoryError(Exception):
     """Ошибка получения данных из репозитория"""
+
+
+class RenderError(Exception):
+    """Ошибка сохранения или рисования графа"""

@@ -1,0 +1,9 @@
+digraph "requests" {
+    rankdir=TB;
+    node [shape=box, fontname="Helvetica"];
+    "requests" [style=filled, fillcolor="#cfe2ff"];
+    "requests" -> "charset-normalizer";
+    "requests" -> "idna";
+    "requests" -> "urllib3";
+    "requests" -> "certifi";
+}

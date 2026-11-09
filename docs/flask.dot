@@ -1,0 +1,15 @@
+digraph "flask" {
+    rankdir=TB;
+    node [shape=box, fontname="Helvetica"];
+    "flask" [style=filled, fillcolor="#cfe2ff"];
+    "flask" -> "blinker";
+    "flask" -> "click";
+    "flask" -> "importlib-metadata";
+    "flask" -> "itsdangerous";
+    "flask" -> "jinja2";
+    "flask" -> "markupsafe";
+    "flask" -> "werkzeug";
+    "importlib-metadata" -> "zipp";
+    "jinja2" -> "markupsafe";
+    "werkzeug" -> "markupsafe";
+}

@@ -1,0 +1,15 @@
+digraph "httpx" {
+    rankdir=TB;
+    node [shape=box, fontname="Helvetica"];
+    "httpx" [style=filled, fillcolor="#cfe2ff"];
+    "httpx" -> "anyio";
+    "httpx" -> "certifi";
+    "httpx" -> "httpcore";
+    "httpx" -> "idna";
+    "anyio" -> "exceptiongroup";
+    "anyio" -> "idna";
+    "anyio" -> "typing-extensions";
+    "exceptiongroup" -> "typing-extensions";
+    "httpcore" -> "certifi";
+    "httpcore" -> "h11";
+}

@@ -577,3 +577,145 @@ Installing collected packages: markupsafe, itsdangerous, click, blinker, werkzeu
 совпадают. Порядок различается, но в обоих списках зависимости стоят раньше
 зависящих пакетов (markupsafe раньше jinja2 и werkzeug), flask последний.
 
+## Этап 5
+
+Визуализация графа зависимостей. По умолчанию программа строит граф, формирует
+его текстовое представление на языке Graphviz (DOT) и сохраняет два файла:
+изображение в формате SVG (путь из `--output`, по умолчанию `graph.svg`) и
+DOT-файл с тем же именем рядом (`graph.dot`). Изображение рисует Graphviz
+(команда `dot`), его нужно установить отдельно и добавить в PATH. Корневой
+пакет закрашен, рёбра, замыкающие циклические зависимости, выделены красным.
+
+С опцией `--ascii-tree` зависимости дополнительно выводятся на экран в виде
+ASCII-дерева. Зависимости пакета раскрываются при первом появлении, повтор
+помечается `(см. выше)`, пакет, замыкающий цикл, `(цикл)`. Дерево выводится
+до обращения к Graphviz и не зависит от него.
+
+Режим `--load-order` из этапа 4 работает как раньше и изображение не рисует.
+Вывод «пакет -> зависимости» из этапа 3 заменён изображением и деревом. Если
+Graphviz не найден или файл нельзя записать, программа выводит `Ошибка: ...`
+и завершается с кодом 1, DOT-файл при этом сохраняется. Для трёх реальных
+пакетов приведены примеры визуализации и сравнение с `pipdeptree`.
+
+src/ascii_tree.py       - ASCII-дерево зависимостей
+src/dot_format.py       - граф в текст на языке Graphviz (DOT)
+src/render.py           - сохранение DOT и SVG, запуск Graphviz
+tests/tests_phase5.py   - тесты этапа 5
+docs/                   - примеры визуализации (SVG и DOT)
+
+### Примеры визуализации
+
+Команды запускались с опциями `--ascii-tree` и `--output docs/<пакет>.svg`.
+Для каждого пакета сохранены изображение (`docs/<пакет>.svg`) и текст на
+языке DOT (`docs/<пакет>.dot`). Корневой пакет закрашен, красным
+выделяются рёбра, замыкающие циклы.
+
+#### requests
+
+`python src/main.py --package requests --repo https://pypi.org/pypi --ascii-tree --output docs/requests.svg`
+
+ASCII-дерево:
+```commandline
+requests
+|-- charset-normalizer
+|-- idna
+|-- urllib3
+`-- certifi
+```
+![Граф зависимостей requests](docs/requests.svg)
+
+#### flask
+
+`python src/main.py --package flask --repo https://pypi.org/pypi --ascii-tree --output docs/flask.svg`
+
+ASCII-дерево:
+```commandline
+flask
+|-- blinker
+|-- click
+|-- importlib-metadata
+|   `-- zipp
+|-- itsdangerous
+|-- jinja2
+|   `-- markupsafe
+|-- markupsafe
+`-- werkzeug
+    `-- markupsafe
+```
+![Граф зависимостей flask](docs/flask.svg)
+
+#### httpx
+
+`python src/main.py --package httpx --repo https://pypi.org/pypi --ascii-tree --output docs/httpx.svg`
+
+ASCII-дерево:
+```commandline
+httpx
+|-- anyio
+|   |-- exceptiongroup
+|   |   `-- typing-extensions
+|   |-- idna
+|   `-- typing-extensions
+|-- certifi
+|-- httpcore
+|   |-- certifi
+|   `-- h11
+`-- idna
+```
+![Граф зависимостей httpx](docs/httpx.svg)
+
+### Сравнение с pipdeptree
+
+Для сравнения использован `pipdeptree` (стандартный инструмент для вывода
+дерева зависимостей, у самого pip такой функции нет). Пакеты установлены pip
+в чистое виртуальное окружение (Python 3.13.10), команда:
+`python -m pipdeptree --python <путь к python окружения> -p <пакет>`.
+
+#### requests
+
+pipdeptree:
+```commandline
+requests==2.34.2
+┣━━ ✓ certifi required: >=2023.5.7 installed: 2026.10.23
+┣━━ ✓ charset-normalizer required: >=2,<4 installed: 3.5.2
+┣━━ ✓ idna required: >=2.5,<4 installed: 3.20
+┗━━ ✓ urllib3 required: >=1.26,<3 installed: 2.8.0
+```
+Вывод: Состав совпадает: certifi, charset-normalizer, idna, urllib3. Различается только порядок: pipdeptree сортирует зависимости по алфавиту, программа выводит их в порядке из метаданных пакета. Версии и ограничения (required, installed) есть только у pipdeptree, программа показывает имена.
+
+#### flask
+
+pipdeptree:
+```commandline
+Flask==3.1.3
+┣━━ ✓ blinker required: >=1.9.0 installed: 1.9.0
+┣━━ ✓ click required: >=8.1.3 installed: 8.5.1
+┣━━ ✓ itsdangerous required: >=2.2.0 installed: 2.2.0
+┣━━ ✓ Jinja2 required: >=3.1.2 installed: 3.1.6
+┃   ┗━━ ✓ MarkupSafe required: >=2.0 installed: 3.0.4
+┣━━ ✓ MarkupSafe required: >=2.1.1 installed: 3.0.4
+┗━━ ✓ Werkzeug required: >=3.1.0 installed: 3.1.9
+    ┗━━ ✓ MarkupSafe required: >=2.1.1 installed: 3.0.4
+```
+Вывод: Состав отличается: в дереве программы есть importlib-metadata и его зависимость zipp, в pipdeptree их нет. В метаданных flask эта зависимость нужна только для старых версий Python, pip на Python 3.13 её не установил, а программа условия не вычисляет и оставила её. Остальные пакеты и связи совпадают, в том числе markupsafe под jinja2 и werkzeug. Имена в pipdeptree как в метаданных (Flask, Jinja2, MarkupSafe), в программе в нижнем регистре.
+
+#### httpx
+
+pipdeptree:
+```commandline
+httpx==0.28.1
+┣━━ ✓ anyio required: Any installed: 4.16.0
+┃   ┣━━ ✓ idna required: >=2.8 installed: 3.20
+┃   ┗━━ ✓ typing_extensions required: >=4.16.0 installed: 4.16.0    
+┣━━ ✓ certifi required: Any installed: 2026.10.23
+┣━━ ✓ httpcore required: ==1.* installed: 1.0.9
+┃   ┣━━ ✓ certifi required: Any installed: 2026.10.23
+┃   ┗━━ ✓ h11 required: >=0.16 installed: 0.16.0
+┗━━ ✓ idna required: Any installed: 3.20
+```
+Вывод: Состав отличается: в дереве программы под anyio есть exceptiongroup (с typing-extensions), в pipdeptree его нет. Это зависимость с условием по версии Python, pip на Python 3.13 её не установил, программа условие не вычисляет. Остальные пакеты и связи совпадают (anyio, certifi, httpcore, h11, idna, typing-extensions). Запись имени различается: typing_extensions в pipdeptree и typing-extensions в программе.
+
+#### Причины расхождения
+Условия в зависимостях (flask: importlib-metadata, zipp; httpx: exceptiongroup).
+Версии: pipdeptree показывает установленные версии и ограничения, программа берёт метаданные последней версии и выводит только имена.
+Порядок и запись имён: pipdeptree сортирует зависимости по алфавиту и пишет имена как в метаданных, программа идёт в порядке метаданных и нормализует имена.

@@ -25,3 +25,6 @@ Thumbs.db
 # Результаты работы программы
 /graph.svg
 /out.svg
+
+/graph.dot
+/out.dot
