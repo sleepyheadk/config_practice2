@@ -12,11 +12,11 @@ SRC_DIR = os.path.abspath(os.path.join(TESTS_DIR, "..", "src"))
 
 sys.path.insert(0, SRC_DIR)
 
-import ascii_tree  # noqa: E402
-import dot_format  # noqa: E402
-import main  # noqa: E402
-import render  # noqa: E402
-from errors import RenderError  # noqa: E402
+import ascii_tree
+import dot_format
+import main
+import render
+from errors import RenderError
 
 GRAPH_TEXT = """\
 A: B C
@@ -250,7 +250,7 @@ class TestRender(unittest.TestCase):
 class TestMain(unittest.TestCase):
     """Работа программы целиком (сохранение файлов подменяется)."""
 
-    def setUp(self):
+    def set_up(self):
         """Создаёт файл тестового репозитория."""
         self.path = write_temp(self, GRAPH_TEXT)
 
